@@ -14,23 +14,22 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+
 /**
- * 根据索引搜索
- *TODO
- * @author Snaiclimb
- * @date 2018/6/9
- * @version 1.8
+ * @author : 陈梓桐
+ * @date : 19:53 2018/6/11
+ * @
  */
 public class Searcher {
 
-    public static void search(String indexDir, String q) throws Exception {
+    private static void search(String indexDir, String q) throws Exception {
 
         // 得到读取索引文件的路径
         Directory dir = FSDirectory.open(Paths.get(indexDir));
         // 通过dir得到的路径下的所有的文件
         IndexReader reader = DirectoryReader.open(dir);
         // 建立索引查询器
-        IndexSearcher is = new IndexSearcher(reader);
+        IndexSearcher indexSearcher = new IndexSearcher(reader);
         // 实例化分析器
         Analyzer analyzer = new StandardAnalyzer();
         // 建立查询解析器
@@ -42,21 +41,18 @@ public class Searcher {
         // 计算索引开始时间
         long start = System.currentTimeMillis();
         // 开始查询
-        
+
         //第一个参数是通过传过来的参数来查找得到的query； 第二个参数是要出查询的行数
-        TopDocs hits = is.search(query, 10);
+        TopDocs topDocs = indexSearcher.search(query, 10);
         // 计算索引结束时间
         long end = System.currentTimeMillis();
-        System.out.println("匹配 " + q + " ，总共花费" + (end - start) + "毫秒" + "查询到" + hits.totalHits + "个记录");
+        System.out.println("匹配 " + q + " ，总共花费" + (end - start) + "毫秒" + "查询到" + topDocs.totalHits + "个记录");
         // 遍历hits.scoreDocs，得到scoreDoc
-        /**
-         * ScoreDoc:得分文档,即得到文档 scoreDocs:代表的是topDocs这个文档数组
-         *
-         * @throws Exception
-         */
-        for (ScoreDoc scoreDoc : hits.scoreDocs) {
-            Document doc = is.doc(scoreDoc.doc);
-            System.out.println(doc.get("fullPath"));
+        //ScoreDoc:得分文档,即得到文档 scoreDocs:代表的是topDocs这个文档数组
+
+        for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
+            Document doc = indexSearcher.doc(scoreDoc.doc);
+            System.out.println(doc.get("fullPath") + "    " + doc.get("content"));
         }
 
         // 关闭reader
@@ -66,7 +62,7 @@ public class Searcher {
     public static void main(String[] args) {
         String indexDir = "C:\\lucene\\dataindex";
         //我们要搜索的内容
-        String q = "lucene";
+        String q = "tika";
         try {
             search(indexDir, q);
         } catch (Exception e) {

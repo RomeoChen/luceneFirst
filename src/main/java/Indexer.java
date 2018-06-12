@@ -1,10 +1,5 @@
 package main.java;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.Paths;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -14,22 +9,26 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Paths;
 /**
  *
- *TODO  索引文件
- * @author Snaiclimb
- * @date 2018年3月30日
- * @version 1.8
+ * @author 陈梓桐
  */
 public class Indexer {
-    // 写索引实例
+    /**
+     * 写索引
+     */
     private IndexWriter writer;
 
     /**
-     * 构造方法 实例化IndexWriter
      *
-     * @param indexDir
-     * @throws IOException
+     * @param indexDir index directory
+     * @throws IOException if there is a IO error
      */
     private Indexer(String indexDir) throws IOException {
         //得到索引所在目录的路径
@@ -45,8 +44,7 @@ public class Indexer {
     /**
      * 关闭写索引
      *
-     * @throws Exception
-     * @return 索引了多少个文件
+     * @throws IOException if there is a IO error
      */
     private void close() throws IOException {
         writer.close();
@@ -54,10 +52,13 @@ public class Indexer {
 
     private int index(String dataDir) throws Exception {
         File[] files = new File(dataDir).listFiles();
-        for (File file : files) {
+        if(files != null){
+            for (File file : files) {
             //索引指定文件
             indexFile(file);
+            }
         }
+
         //返回索引了多少个文件
         return writer.numDocs();
 
@@ -66,13 +67,13 @@ public class Indexer {
     /**
      * 索引指定文件
      *
-     * @param f
+     * @param file write document file into index file
      */
-    private void indexFile(File f) throws Exception {
+    private void indexFile(@NotNull File file) throws Exception {
         //输出索引文件的路径
-        System.out.println("索引文件：" + f.getCanonicalPath());
+        System.out.println("索引文件：" + file.getCanonicalPath());
         //获取文档，文档里再设置每个字段
-        Document doc = getDocument(f);
+        Document doc = getDocument(file);
         //开始写入,就是把文档写进了索引文件里去了；
         writer.addDocument(doc);
     }
@@ -80,17 +81,17 @@ public class Indexer {
     /**
      * 获取文档，文档里再设置每个字段
      *
-     * @param f
+     * @param file get Document of file
      * @return document
      */
-    private Document getDocument(File f) throws Exception {
+    private Document getDocument(File file) throws Exception {
         Document doc = new Document();
         //把设置好的索引加到Document里，以便在确定被索引文档
-        doc.add(new TextField("contents", new FileReader(f)));
+        doc.add(new TextField("contents", new FileReader(file)));
         //Field.Store.YES：把文件名存索引文件里，为NO就说明不需要加到索引文件里去
-        doc.add(new TextField("fileName", f.getName(), Field.Store.YES));
+        doc.add(new TextField("fileName", file.getName(), Field.Store.YES));
         //把完整路径存在索引文件里
-        doc.add(new TextField("fullPath", f.getCanonicalPath(), Field.Store.YES));
+        doc.add(new TextField("fullPath", file.getCanonicalPath(), Field.Store.YES));
         return doc;
     }
 
@@ -111,7 +112,9 @@ public class Indexer {
             e.printStackTrace();
         } finally {
             try {
-                indexer.close();
+                if(indexer!=null) {
+                    indexer.close();
+                }
             } catch (Exception e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
